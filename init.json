@@ -1,0 +1,27 @@
+{
+    "menubar": [
+        {
+            "menu": "菜单1",
+            "menuAction": [
+                {
+                    "action": "项目1",
+                    "src": "widgets.test_btn.test_btn"
+                },
+                {
+                    "action": "test2",
+                    "src": "测试2"
+                }
+            ]
+        },
+        {
+            "menu": "菜单2",
+            "menuAction": [
+                {
+                    "action": "test3",
+                    "src": "测试3"
+                }
+            ]
+        }
+
+    ]
+}

@@ -4,6 +4,8 @@ import sys
 import os
 from pathlib import Path
 import time
+import platform
+
 
 # DESIGNER_DIR = "C:\Users\wj\AppData\Local\Programs\Python\Python38\Lib\site-packages\qt5_applications\Qt\bin"
 # PYUIC_DIR = "C:\Users\wj\AppData\Local\Programs\Python\Python38\Scripts"
@@ -41,8 +43,10 @@ def doTransform(file_path, pyui_file):
 
 if __name__ == "__main__":
     PYUI_DIR = "widgets"
-    PYUIC_FILE = "pyuic5.exe"
     REGEX = "*.ui"
+    PYUIC_FILE = "pyuic5.exe"
+    if platform.system() == "Darwin":
+        PYUIC_FILE = "pyside2-uic"
     # -----------------------------
     allFiles = scanFiles(PYUI_DIR, REGEX)
     print(allFiles.keys())

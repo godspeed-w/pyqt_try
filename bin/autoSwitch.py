@@ -16,11 +16,6 @@ def scanFiles(dir, regex):
     for file_path in target_dir.rglob(regex):
         if file_path.is_file():
             file_stat = file_path.stat()
-            # print(f"文件路径: {file_path}")
-            # print(f"文件大小: {file_stat.st_size} 字节")
-            # print(f"创建时间: {time.ctime(file_stat.st_ctime)}")
-            # print(f"修改时间: {time.ctime(file_stat.st_mtime)}")
-            # print(f"访问时间: {time.ctime(file_stat.st_atime)}")
             updateTime = time.ctime(file_stat.st_mtime)
             files[file_path.__str__()] = updateTime
     return files
@@ -33,7 +28,7 @@ def doTransform(file_path, pyui_file):
     # 获取文件名
     filename = os.path.basename(file_path).split(".")[0]
     pyFile = os.path.join(directory, filename + "_ui.py")
-    command = f"{pyui_file} -o {pyFile} {file_path}"
+    command = f'{pyui_file} -o "{pyFile}" "{file_path}"'
     # 执行命令
     result = os.system(command)
     local_time = time.localtime(time.time())

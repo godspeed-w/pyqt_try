@@ -8,8 +8,8 @@
                     "src": "widgets.test_btn.test_btn"
                 },
                 {
-                    "action": "test2",
-                    "src": "测试2"
+                    "action": "理财收益",
+                    "src": "widgets.calcReturn.calcReturn"
                 }
             ]
         },

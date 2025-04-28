@@ -17,8 +17,8 @@
             "menu": "菜单2",
             "menuAction": [
                 {
-                    "action": "test3",
-                    "src": "测试3"
+                    "action": "多线程测试",
+                    "src": "widgets.test_thread.test_thread"
                 }
             ]
         }

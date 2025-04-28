@@ -12,10 +12,10 @@ class Item(QtWidgets.QWidget):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
 
-        self.ui.pushButton.clicked.connect(self.test_btn)
+    #     self.ui.pushButton.clicked.connect(self.test_btn)
 
-    def test_btn(self):
-        print("test_btn")
+    # def test_btn(self):
+    #     print("test_btn")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

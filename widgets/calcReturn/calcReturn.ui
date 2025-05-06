@@ -164,14 +164,14 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <widget class="QRadioButton" name="radioButton">
+             <widget class="QRadioButton" name="radioButton_statusY">
               <property name="text">
                <string>Y</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="radioButton_2">
+             <widget class="QRadioButton" name="radioButton_statusN">
               <property name="text">
                <string>N</string>
               </property>
@@ -269,7 +269,7 @@
         <item>
          <widget class="QLabel" name="label_13">
           <property name="text">
-           <string>查询条件：</string>
+           <string>产品名：</string>
           </property>
          </widget>
         </item>
@@ -296,14 +296,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_3">
+           <widget class="QRadioButton" name="radioButton_his">
             <property name="text">
              <string>历史</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_4">
+           <widget class="QRadioButton" name="radioButton_exist">
             <property name="text">
              <string>现存</string>
             </property>

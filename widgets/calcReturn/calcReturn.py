@@ -9,7 +9,7 @@ except:
     from calcReturn_ui import Ui_Form
 
 
-class Table_template():
+class Invest_dbView():
     def __init__(self, data=()):
         self.vest_id = str(data[0])
         self.prd_channel = str(data[1])
@@ -64,16 +64,16 @@ class Item(QtWidgets.QWidget):
         self.ui.pushButton_save.clicked.connect(self.doDbSave)
 
     def getUiDataVale(self):
-        self.uiData.prd_name = self.ui.lineEdit_prdName.text()
-        self.uiData.prd_channel = self.ui.lineEdit_channel.text()
-        self.uiData.buy_amt = self.ui.lineEdit_cost.text()
-        self.uiData.current_amt = self.ui.lineEdit_amt.text()
+        self.uiData.prd_name = self.ui.lineEdit_prdName.text().strip()
+        self.uiData.prd_channel = self.ui.lineEdit_channel.text().strip()
+        self.uiData.buy_amt = self.ui.lineEdit_cost.text().strip()
+        self.uiData.current_amt = self.ui.lineEdit_amt.text().strip()
         self.uiData.due_date = self.ui.dateEdit_maDate.date().toString("yyyy-MM-dd")
         self.uiData.buy_date = self.ui.dateEdit_buyDate.date().toString("yyyy-MM-dd")
         self.uiData.ac_date = self.ui.dateEdit_valDate.date().toString("yyyy-MM-dd")
-        self.uiData.prd_status = self.ui.radioButton_statusY.text()
-        self.uiData.inqCondition_prdName = self.ui.lineEdit_search_condition.text()
-        self.uiData.inqCondition_prdChannel = self.ui.lineEdit_search_channel.text()
+        self.uiData.prd_status = self.ui.radioButton_statusY.text().strip()
+        self.uiData.inqCondition_prdName = self.ui.lineEdit_search_condition.text().strip()
+        self.uiData.inqCondition_prdChannel = self.ui.lineEdit_search_channel.text().strip()
     
 
     def dbExcute(self, sql):
@@ -107,7 +107,7 @@ class Item(QtWidgets.QWidget):
         data = self.dbSearch(sql)
         self.ui.tableWidget.setRowCount(len(data))
         for i in range(len(data)):
-            item = Table_template(data[i])
+            item = Invest_dbView(data[i])
             self.ui.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(item.prd_status))
             self.ui.tableWidget.setItem(i, 1, QtWidgets.QTableWidgetItem(item.prd_name))
             self.ui.tableWidget.setItem(i, 2, QtWidgets.QTableWidgetItem(item.prd_channel))
@@ -124,19 +124,30 @@ class Item(QtWidgets.QWidget):
 
 
     def doDbSave(self):
-        # 计算收益率
-        valDate = self.ui.dateEdit_valDate.date().toString("yyyy-MM-dd")
-        sql = "select * from invest"
-        data = self.dbSearch(sql)
-        for i in range(len(data)):
-            item = Table_template(data[i])
-            if item.ac_date is None:
-                item.ac_date = valDate
+        self.getUiDataVale()
+        if self.uiData.prd_name == "":
+            QtWidgets.QMessageBox.information(self, "提示", "请输入产品名称")
+            return
+        serSql = "select * from invest where prd_name='{}' and ac_date='{}'".format(self.uiData.prd_name, self.uiData.ac_date)
+        data = self.dbSearch(serSql)
+        print(data)
+        profit = float(self.uiData.current_amt) - float(self.uiData.buy_amt)
+        days = (datetime.datetime.strptime(self.uiData.ac_date, "%Y-%m-%d") - datetime.datetime.strptime(self.uiData.buy_date, "%Y-%m-%d")).days
+        real_rate = profit / float(self.uiData.buy_amt) * 100
+        if len(data) > 0:
+            formatResData = Invest_dbView(data[0])
+            updSql = "update invest set prd_channel='{}',prd_name='{}',prd_status='{}',buy_amt='{}',buy_date='{}',due_date='{}',ac_date='{}',current_amt='{}',profit='{}',days='{}',real_rate='{}' where vest_id='{}'"
+            updSql = updSql.format(self.uiData.prd_channel, self.uiData.prd_name, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.buy_date, self.uiData.due_date, self.uiData.ac_date, self.uiData.current_amt, profit, days, real_rate, formatResData.vest_id) 
+            self.dbExcute(updSql)
+            QtWidgets.QMessageBox.information(self, "提示", "更新成功")
+        else:
+            insSql = "insert into invest (prd_channel,prd_name,prd_status,buy_amt,buy_date,due_date,ac_date,current_amt,profit,days,real_rate) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"
+            insSql = insSql.format(self.uiData.prd_channel, self.uiData.prd_name, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.buy_date, self.uiData.due_date, self.uiData.ac_date, self.uiData.current_amt, profit, days, real_rate) 
+            self.dbExcute(insSql)
+            QtWidgets.QMessageBox.information(self, "提示", "保存成功")
+        
+        self.doDbSearch()
             
-            item.real_rate = item.current_amt / item.buy_amt
-            sql = "update invest set ac_date='{}', days={}, real_rate={} where id={}".format(item.ac_date, item.days, item.real_rate, item.vest_id)
-            self.dbExcute(sql)
-            print(sql)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

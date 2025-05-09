@@ -144,7 +144,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QDateEdit" name="dateEdit_valDate"/>
+           <widget class="QDateEdit" name="dateEdit_acDate"/>
           </item>
          </layout>
         </item>
@@ -237,7 +237,7 @@
              <bool>false</bool>
             </property>
             <property name="text">
-             <string/>
+             <string>0</string>
             </property>
            </widget>
           </item>

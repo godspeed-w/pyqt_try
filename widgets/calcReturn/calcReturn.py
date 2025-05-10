@@ -55,7 +55,7 @@ class Item(QtWidgets.QWidget):
             'host': 'localhost',
             'port': 3306,
             'user': 'root',
-            'password': '123456',
+            'password': '12345678',
             'database': 'book_keeping',
             'charset': 'utf8'
         }
@@ -70,6 +70,8 @@ class Item(QtWidgets.QWidget):
         # 计算收益与收益率
         self.ui.lineEdit_cost.textChanged.connect(self.calcProfit)
         self.ui.lineEdit_amt.textChanged.connect(self.calcProfit)
+        # 查询数据库
+        self.ui.lineEdit_prdName.textChanged.connect(self.doDbSearchPrdInfo)
 
     def is_number(self,s):
         try:
@@ -91,6 +93,14 @@ class Item(QtWidgets.QWidget):
         self.uiData.inqCondition_prdName = self.ui.lineEdit_search_condition.text().strip()
         self.uiData.inqCondition_prdChannel = self.ui.lineEdit_search_channel.text().strip()
 
+    def uiDataCheck(self):
+        self.getUiDataVale()
+        if self.uiData.current_amt != "" or self.uiData.buy_amt != "" :
+            if not self.is_number(self.uiData.buy_amt) or not self.is_number(self.uiData.current_amt):
+                QtWidgets.QMessageBox.warning(self, "错误", "输入的金额不是数字")
+                return False
+        return True
+        
     def dbExcute(self, sql):
         try:
             conn = pymysql.connect(**self.dbConfig)
@@ -136,10 +146,42 @@ class Item(QtWidgets.QWidget):
             self.ui.tableWidget.setItem(i, 11, QtWidgets.QTableWidgetItem(item.ts))
             self.ui.tableWidget.setItem(i, 12, QtWidgets.QTableWidgetItem(item.vest_id))
 
+    def doDbSearchPrdInfo(self):
+        self.getUiDataVale()
+        sql = "select * from invest where prd_name = '{}'".format(self.uiData.prd_name)
+        data = self.dbSearch(sql)
+        if len(data) > 0:
+            formatResData = Invest_dbView(data[0])
+            self.ui.lineEdit_channel.setText(formatResData.prd_channel)
+            self.ui.lineEdit_cost.setText(formatResData.buy_amt)
+            self.ui.lineEdit_amt.setText(formatResData.current_amt)
+            print(formatResData.ma_date)
+            self.ui.dateEdit_maDate.setDate(QDateTime.fromString(formatResData.ma_date, "yyyy-MM-dd").date())
+            self.ui.dateEdit_buyDate.setDate(QDateTime.fromString(formatResData.buy_date, "yyyy-MM-dd").date())
+            self.ui.dateEdit_acDate.setDate(QDateTime.fromString(formatResData.ac_date, "yyyy-MM-dd").date())
+            self.ui.lineEdit_days.setText(formatResData.days)
+            self.ui.lineEdit_profit.setText(formatResData.profit)
+            self.ui.lineEdit_rate.setText(formatResData.real_rate)
+            self.ui.radioButton_statusY.setChecked(True) if formatResData.prd_status == "Y" else self.ui.radioButton_statusN.setChecked(True)
+        else:
+            self.ui.lineEdit_channel.setText("")
+            self.ui.lineEdit_cost.setText("")
+            self.ui.lineEdit_amt.setText("")
+            self.ui.dateEdit_maDate.setDate(QDateTime.fromString("9999-12-31", "yyyy-MM-dd").date())
+            self.ui.dateEdit_buyDate.setDate(QDateTime.currentDateTime().date())
+            self.ui.dateEdit_acDate.setDate(QDateTime.currentDateTime().date())
+            self.ui.lineEdit_days.setText("0")
+            self.ui.lineEdit_profit.setText("0")
+            self.ui.lineEdit_rate.setText("0%")
+            self.ui.radioButton_statusY.setChecked(True)
+
     def doDbSave(self):
         self.getUiDataVale()
         if self.uiData.prd_name == "":
             QtWidgets.QMessageBox.information(self, "提示", "请输入产品名称")
+            return
+        if self.uiDataCheck() == False:
+            print("数据校验失败")
             return
         serSql = "select * from invest where prd_name='{}' and ac_date='{}'".format(self.uiData.prd_name, self.uiData.ac_date)
         data = self.dbSearch(serSql)
@@ -169,18 +211,20 @@ class Item(QtWidgets.QWidget):
     
     def calcProfit(self):
         self.getUiDataVale()
-        if self.uiData.current_amt != "" and self.uiData.buy_amt != "":
-            if self.is_number(self.uiData.buy_amt) and self.is_number(self.uiData.current_amt):
-                current_amt = float(self.uiData.current_amt)
-                buy_amt = float(self.uiData.buy_amt)
-                days = int(self.uiData.days)
-                profit = current_amt - buy_amt
-                self.ui.lineEdit_profit.setText(str(profit))
-                if days == 0:
-                    self.ui.lineEdit_rate.setText("0")
-                    return
-                real_rate = round((profit / days * 365) / buy_amt,2)
-                self.ui.lineEdit_rate.setText(str(real_rate))
+        if self.uiData.current_amt != "" and self.uiData.buy_amt != "" and self.is_number(self.uiData.buy_amt) and self.is_number(self.uiData.current_amt):
+            current_amt = float(self.uiData.current_amt)
+            buy_amt = float(self.uiData.buy_amt)
+            days = int(self.uiData.days)
+            profit = current_amt - buy_amt
+            self.ui.lineEdit_profit.setText(str(profit))
+            if days == 0 or buy_amt == 0:
+                self.ui.lineEdit_rate.setText("0")
+                return
+            real_rate = round((profit / days * 365) / buy_amt,2)
+            self.ui.lineEdit_rate.setText(str(real_rate)+"%")
+        else:
+            self.ui.lineEdit_profit.setText("0")
+            self.ui.lineEdit_rate.setText("0%")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

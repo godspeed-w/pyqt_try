@@ -88,6 +88,7 @@ class Ui_Form(object):
         self.label_3.setObjectName("label_3")
         self.horizontalLayout_10.addWidget(self.label_3)
         self.dateEdit_acDate = QtWidgets.QDateEdit(self.groupBox_3)
+        self.dateEdit_acDate.setDateTime(QtCore.QDateTime(QtCore.QDate(2025, 5, 8), QtCore.QTime(0, 0, 0)))
         self.dateEdit_acDate.setObjectName("dateEdit_acDate")
         self.horizontalLayout_10.addWidget(self.dateEdit_acDate)
         self.horizontalLayout_16.addLayout(self.horizontalLayout_10)

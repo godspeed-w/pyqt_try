@@ -144,7 +144,18 @@
            </widget>
           </item>
           <item>
-           <widget class="QDateEdit" name="dateEdit_acDate"/>
+           <widget class="QDateEdit" name="dateEdit_acDate">
+            <property name="dateTime">
+             <datetime>
+              <hour>0</hour>
+              <minute>0</minute>
+              <second>0</second>
+              <year>2025</year>
+              <month>5</month>
+              <day>8</day>
+             </datetime>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>

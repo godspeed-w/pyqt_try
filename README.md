@@ -19,7 +19,7 @@ create table invest(
 	prd_channel char(20) comment '产品购买渠道',
 	prd_name char(80) comment '产品名称',
 	prd_rate float(10,2) comment '产品预期收益',
-	prd_status char(1) comment '产品状态（到期可赎回1、封闭期0）',
+	prd_status char(1) comment '产品状态（未赎回N,已赎回Y）',
 	buy_amt float(10,2) comment '购买金额',
 	buy_date date comment '购买日',
 	ma_date date comment '到期日',

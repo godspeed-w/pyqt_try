@@ -137,28 +137,55 @@ class Item(QtWidgets.QWidget):
     
     def doDbSearch(self):
         self.getUiDataVale()
-        sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%'".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
+        sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%' and prd_status != 'Y'".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
+        if self.uiData.inqRadioButton_exist == "N":
+            sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%'".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
         data = self.dbSearch(sql)
         self.ui.tableWidget.setRowCount(len(data))
+        totalValue, openAmt, closeAmt, profit , status= 0, 0, 0, 0, ""
+        today = datetime.date.today()
         for i in range(len(data)):
             item = Invest_dbView(data[i])
-            self.ui.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(item.prd_status))
+            ma_date_obj = datetime.datetime.strptime(item.ma_date, "%Y-%m-%d").date()
+            if item.prd_status == "Y":
+                status = "已赎回"
+            elif ma_date_obj <= today:
+                status = "到期可赎"
+            else:
+                status = "封闭期"
+            self.ui.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(status))
             self.ui.tableWidget.setItem(i, 1, QtWidgets.QTableWidgetItem(item.prd_name))
             self.ui.tableWidget.setItem(i, 2, QtWidgets.QTableWidgetItem(item.prd_channel))
             self.ui.tableWidget.setItem(i, 3, QtWidgets.QTableWidgetItem(item.buy_amt))
             self.ui.tableWidget.setItem(i, 4, QtWidgets.QTableWidgetItem(item.current_amt))
-            self.ui.tableWidget.setItem(i, 5, QtWidgets.QTableWidgetItem(item.profit))
-            self.ui.tableWidget.setItem(i, 6, QtWidgets.QTableWidgetItem(item.real_rate))
+            self.ui.tableWidget.setItem(i, 5, QtWidgets.QTableWidgetItem(item.real_rate))
+            self.ui.tableWidget.setItem(i, 6, QtWidgets.QTableWidgetItem(item.profit))
             self.ui.tableWidget.setItem(i, 7, QtWidgets.QTableWidgetItem(item.days))
             self.ui.tableWidget.setItem(i, 8, QtWidgets.QTableWidgetItem(item.buy_date))
             self.ui.tableWidget.setItem(i, 9, QtWidgets.QTableWidgetItem(item.ma_date))
             self.ui.tableWidget.setItem(i, 10, QtWidgets.QTableWidgetItem(item.ac_date))
             self.ui.tableWidget.setItem(i, 11, QtWidgets.QTableWidgetItem(item.ts))
             self.ui.tableWidget.setItem(i, 12, QtWidgets.QTableWidgetItem(item.vest_id))
+            totalValue += float(item.current_amt)
+            profit += float(item.profit)
+            if status == "封闭期":
+                closeAmt += float(item.current_amt)
+            if status == "到期可赎":
+                openAmt += float(item.buy_amt)
+        if self.uiData.inqRadioButton_exist == "Y":
+            self.ui.lineEdit_search_totalValue.setText(str(round(totalValue,2)))
+            self.ui.lineEdit_search_openAmt.setText(str(round(openAmt,2)))
+            self.ui.lineEdit_search_closeAmt.setText(str(round(closeAmt,2)))
+            self.ui.lineEdit_search_profit.setText(str(round(profit,2)))
+        else:
+            self.ui.lineEdit_search_totalValue.setText("")
+            self.ui.lineEdit_search_openAmt.setText("")
+            self.ui.lineEdit_search_closeAmt.setText("")
+            self.ui.lineEdit_search_profit.setText("")
 
     def doDbSearchPrdInfo(self):
         self.getUiDataVale()
-        sql = "select * from invest where prd_name = '{}'".format(self.uiData.prd_name)
+        sql = "select * from invest where prd_name = '{}' order by ac_date desc limit 1".format(self.uiData.prd_name)
         data = self.dbSearch(sql)
         if len(data) > 0:
             formatResData = Invest_dbView(data[0])
@@ -167,7 +194,6 @@ class Item(QtWidgets.QWidget):
             self.ui.lineEdit_amt.setText(formatResData.current_amt)
             self.ui.dateEdit_maDate.setDate(QDateTime.fromString(formatResData.ma_date, "yyyy-MM-dd").date())
             self.ui.dateEdit_buyDate.setDate(QDateTime.fromString(formatResData.buy_date, "yyyy-MM-dd").date())
-            self.ui.dateEdit_acDate.setDate(QDateTime.fromString(formatResData.ac_date, "yyyy-MM-dd").date())
             self.ui.lineEdit_days.setText(formatResData.days)
             self.ui.lineEdit_profit.setText(formatResData.profit)
             self.ui.lineEdit_rate.setText(formatResData.real_rate)
@@ -192,7 +218,7 @@ class Item(QtWidgets.QWidget):
         if self.uiDataCheck() == False:
             print("数据校验失败")
             return
-        serSql = "select * from invest where prd_name='{}' and buy_date='{}'".format(self.uiData.prd_name, self.uiData.buy_date)
+        serSql = "select * from invest where prd_name='{}' and buy_date='{}' and ac_date='{}'".format(self.uiData.prd_name, self.uiData.buy_date, self.uiData.ac_date)
         data = self.dbSearch(serSql)
         print(data)
         if len(data) > 0:

@@ -24,7 +24,8 @@ class Invest_dbView():
         self.profit = str(data[10])
         self.days = str(data[11])
         self.real_rate = str(data[12])
-        self.ts = str(data[13])
+        self.isnew = str(data[13])
+        self.ts = str(data[14])
 
     def __str__(self):
         return self.prd_name + " " + str(self.current_amt) + " " + str(self.by_date)
@@ -62,6 +63,7 @@ class Item(QtWidgets.QWidget):
             'database': 'book_keeping',
             'charset': 'utf8'
         }
+        self.lastCurrentAmt = 0
         today = QDateTime.currentDateTime()
         self.ui.dateEdit_acDate.setDateTime(today)
         self.ui.dateEdit_buyDate.setDateTime(today)
@@ -74,7 +76,7 @@ class Item(QtWidgets.QWidget):
         self.ui.lineEdit_cost.textChanged.connect(self.calcProfit)
         self.ui.lineEdit_amt.textChanged.connect(self.calcProfit)
         # 查询数据库
-        self.ui.lineEdit_prdName.textChanged.connect(self.doDbSearchPrdInfo)
+        self.ui.lineEdit_prdName.textChanged.connect(self.doFill)
 
     def is_number(self,s):
         try:
@@ -137,9 +139,9 @@ class Item(QtWidgets.QWidget):
     
     def doDbSearch(self):
         self.getUiDataVale()
-        sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%' and prd_status != 'Y'".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
+        sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%' and prd_status != 'Y' and isnew='Y'".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
         if self.uiData.inqRadioButton_exist == "N":
-            sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%'".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
+            sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%' order by ac_date desc".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
         data = self.dbSearch(sql)
         self.ui.tableWidget.setRowCount(len(data))
         totalValue, openAmt, closeAmt, profit , status= 0, 0, 0, 0, ""
@@ -183,9 +185,9 @@ class Item(QtWidgets.QWidget):
             self.ui.lineEdit_search_closeAmt.setText("")
             self.ui.lineEdit_search_profit.setText("")
 
-    def doDbSearchPrdInfo(self):
+    def doFill(self):
         self.getUiDataVale()
-        sql = "select * from invest where prd_name = '{}' order by ac_date desc limit 1".format(self.uiData.prd_name)
+        sql = "select * from invest where prd_name = '{}' and isnew='Y' limit 1".format(self.uiData.prd_name)
         data = self.dbSearch(sql)
         if len(data) > 0:
             formatResData = Invest_dbView(data[0])
@@ -194,10 +196,9 @@ class Item(QtWidgets.QWidget):
             self.ui.lineEdit_amt.setText(formatResData.current_amt)
             self.ui.dateEdit_maDate.setDate(QDateTime.fromString(formatResData.ma_date, "yyyy-MM-dd").date())
             self.ui.dateEdit_buyDate.setDate(QDateTime.fromString(formatResData.buy_date, "yyyy-MM-dd").date())
-            self.ui.lineEdit_days.setText(formatResData.days)
-            self.ui.lineEdit_profit.setText(formatResData.profit)
-            self.ui.lineEdit_rate.setText(formatResData.real_rate)
+            self.ui.dateEdit_acDate.setDate(QDateTime.currentDateTime().date())
             self.ui.radioButton_statusY.setChecked(True) if formatResData.prd_status == "Y" else self.ui.radioButton_statusN.setChecked(True)
+            self.lastCurrentAmt = float(formatResData.current_amt)
         else:
             self.ui.lineEdit_channel.setText("")
             self.ui.lineEdit_cost.setText("0")
@@ -209,6 +210,7 @@ class Item(QtWidgets.QWidget):
             self.ui.lineEdit_profit.setText("0")
             self.ui.lineEdit_rate.setText("0")
             self.ui.radioButton_statusN.setChecked(True)
+            self.lastCurrentAmt = 0
 
     def doDbSave(self):
         self.getUiDataVale()
@@ -218,21 +220,38 @@ class Item(QtWidgets.QWidget):
         if self.uiDataCheck() == False:
             print("数据校验失败")
             return
-        serSql = "select * from invest where prd_name='{}' and buy_date='{}' and ac_date='{}'".format(self.uiData.prd_name, self.uiData.buy_date, self.uiData.ac_date)
-        data = self.dbSearch(serSql)
-        print(data)
-        if len(data) > 0:
-            formatResData = Invest_dbView(data[0])
-            updSql = "update invest set prd_channel='{}',prd_name='{}',prd_status='{}',buy_amt='{}',buy_date='{}',ma_date='{}',ac_date='{}',current_amt='{}',profit='{}',days='{}',real_rate='{}' where vest_id='{}'"
-            updSql = updSql.format(self.uiData.prd_channel, self.uiData.prd_name, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.buy_date, self.uiData.ma_date, self.uiData.ac_date, self.uiData.current_amt, self.uiData.profit, self.uiData.days, self.uiData.real_rate, formatResData.vest_id) 
+        serNewestPrdSql = "select * from invest where prd_name='{}' and buy_date='{}' and isnew='Y'".format(self.uiData.prd_name, self.uiData.buy_date)
+        maxPrdAcDate = datetime.datetime.strptime("9999-12-31", "%Y-%m-%d").date()
+        newPrdInfo = self.dbSearch(serNewestPrdSql)
+        if len(newPrdInfo) > 0:
+            # 计算最大的ac_date
+            maxPrd = Invest_dbView(newPrdInfo[0])
+            maxPrdAcDate = datetime.datetime.strptime(maxPrd.ac_date, "%Y-%m-%d").date()
+        # 每个ac_date只允许插入一条
+        serPrdSql = "select * from invest where prd_name='{}' and buy_date='{}' and ac_date='{}' limit 1".format(self.uiData.prd_name, self.uiData.buy_date, self.uiData.ac_date)
+        prdInfo = self.dbSearch(serPrdSql)
+        if len(prdInfo) > 0:
+            formatResData = Invest_dbView(prdInfo[0])
+            updSql = "update invest set prd_channel='{}',prd_status='{}',buy_amt='{}',ma_date='{}',current_amt='{}',profit='{}',days='{}',real_rate='{}' where vest_id='{}'"
+            updSql = updSql.format(self.uiData.prd_channel, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.ma_date, self.uiData.current_amt, self.uiData.profit, self.uiData.days, self.uiData.real_rate, formatResData.vest_id) 
             flg = self.dbExcute(updSql)
             if flg == False:
                 QtWidgets.QMessageBox.information(self, "提示", "更新失败")
             else:
                 QtWidgets.QMessageBox.information(self, "提示", "更新成功")
         else:
-            insSql = "insert into invest (prd_channel,prd_name,prd_status,buy_amt,buy_date,ma_date,ac_date,current_amt,profit,days,real_rate) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"
-            insSql = insSql.format(self.uiData.prd_channel, self.uiData.prd_name, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.buy_date, self.uiData.ma_date, self.uiData.ac_date, self.uiData.current_amt, self.uiData.profit, self.uiData.days, self.uiData.real_rate) 
+            insSql, isnew = "",""
+            maxDate = datetime.datetime.strptime("9999-12-31", "%Y-%m-%d").date()
+            if maxPrdAcDate == maxDate:
+                isnew = "Y"
+            elif maxPrdAcDate < datetime.datetime.strptime(self.uiData.ac_date, "%Y-%m-%d").date():
+                isnew = "Y"
+                updmaxPrdAcDateSql = "update invest set isnew='N' where prd_name='{}' and buy_date='{}' and isnew='Y'".format(self.uiData.prd_name, self.uiData.buy_date)
+                self.dbExcute(updmaxPrdAcDateSql)
+            else:
+                isnew = "N"
+            insSql = "insert into invest (prd_channel,prd_name,prd_status,buy_amt,buy_date,ma_date,ac_date,current_amt,profit,days,real_rate,isnew) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"
+            insSql = insSql.format(self.uiData.prd_channel, self.uiData.prd_name, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.buy_date, self.uiData.ma_date, self.uiData.ac_date, self.uiData.current_amt, self.uiData.profit, self.uiData.days, self.uiData.real_rate,isnew) 
             flg = self.dbExcute(insSql)
             if flg == False:
                 QtWidgets.QMessageBox.information(self, "提示", "保存失败")
@@ -248,6 +267,7 @@ class Item(QtWidgets.QWidget):
     
     def calcProfit(self):
         self.getUiDataVale()
+        self.ui.lineEdit_lastProfit.setText("0")
         if self.uiData.current_amt != "" and self.uiData.buy_amt != "" and self.is_number(self.uiData.buy_amt) and self.is_number(self.uiData.current_amt):
             current_amt = float(self.uiData.current_amt)
             buy_amt = float(self.uiData.buy_amt)
@@ -259,9 +279,14 @@ class Item(QtWidgets.QWidget):
                 return
             real_rate = round((profit / days * 365) / buy_amt * 100,2)
             self.ui.lineEdit_rate.setText(str(real_rate))
+            if self.lastCurrentAmt != 0:
+                lastProfit = round(current_amt - self.lastCurrentAmt,2)
+                self.ui.lineEdit_lastProfit.setText(str(lastProfit))
         else:
             self.ui.lineEdit_profit.setText("0")
             self.ui.lineEdit_rate.setText("0")
+            self.ui.lineEdit_lastProfit.setText("0")
+            self.lastCurrentAmt == 0
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

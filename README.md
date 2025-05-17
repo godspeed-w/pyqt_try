@@ -28,14 +28,19 @@ create table invest(
 	profit float(10,2) comment '当前收益金额',
 	days int comment '相差天数',
 	real_rate float comment '真实年化',
+	isnew char(1) comment '是否最新记录（Y,N）',
 	ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP comment '时间戳',
 	primary key (vest_id)
 )ENGINE=InnoDB  DEFAULT CHARSET=utf8 comment = '投资信息表';
-insert into invest (prd_channel, prd_name, prd_status, buy_date, ma_date, ac_date, days, real_rate) values ('JNQLWQzpB0', 'XH3s', '1', '6067-07-10', '4799-03-02', '2196-11-10', 2920, 609);
-insert into invest (prd_channel, prd_name, prd_status, buy_date, ma_date, ac_date, days, real_rate) values ('g', 'zNluHO1I', '1', '2984-03-21', '2949-02-19', '4366-02-01', 6425, 9411);
-insert into invest (prd_channel, prd_name, prd_status, buy_date, ma_date, ac_date, days, real_rate) values ('i', 'FQ5yDzOxVu', '1', '8583-02-19', '2883-03-23', '3256-01-24', 5862, 4111);
-insert into invest (prd_channel, prd_name, prd_status, buy_date, ma_date, ac_date, days, real_rate) values ('zQe', 'ACMNrJ6H', '0', '2485-02-26', '7920-10-03', '7525-02-10', 9657, 7138);
-insert into invest (prd_channel, prd_name, prd_status, buy_date, ma_date, ac_date, days, real_rate) values ('CLwvTdm', '1SSWB7R', '0', '4261-03-01', '1399-10-14', '8574-06-20', 4513, 2544);
-select * from invest;
 
+-- 数据库备份
+mysqldump -u root -p book_keeping > book_keeping_backup.sql
+-- 表备份
+mysqldump -u root -p book_keeping invest > invest_backup.sql
+
+-- 数据库导入
+mysql -u root -p book_keeping < book_keeping_backup.sql
+-- 表导入
+mysql -u root -p book_keeping < invest_backup.sql
+source invest_backup.sql
 ```

@@ -77,6 +77,10 @@ class Item(QtWidgets.QWidget):
         self.ui.lineEdit_amt.textChanged.connect(self.calcProfit)
         # 查询数据库
         self.ui.lineEdit_prdName.textChanged.connect(self.doFill)
+        # 设置表格选择行为为整行选择
+        self.ui.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        # 绑定点击事件
+        self.ui.tableWidget.itemClicked.connect(self.on_table_row_clicked)
 
     def is_number(self,s):
         try:
@@ -100,6 +104,20 @@ class Item(QtWidgets.QWidget):
         self.uiData.inqCondition_prdName = self.ui.lineEdit_search_condition.text().strip()
         self.uiData.inqCondition_prdChannel = self.ui.lineEdit_search_channel.text().strip()
         self.uiData.inqRadioButton_exist = "Y" if self.ui.radioButton_exist.isChecked() else "N"
+   
+    def on_table_row_clicked(self, item):
+        """表格行点击事件处理函数"""
+        row = item.row()
+        # 获取该行所有单元格的数据
+        row_data = []
+        for col in range(self.ui.tableWidget.columnCount()):
+            cell_item = self.ui.tableWidget.item(row, col)
+            if cell_item:
+                row_data.append(cell_item.text())
+            else:
+                row_data.append("")
+        print("选中行的数据:", row_data)
+        # 在这里添加你需要执行的操作
 
     def uiDataCheck(self):
         self.getUiDataVale()

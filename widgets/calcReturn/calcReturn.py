@@ -59,7 +59,7 @@ class Item(QtWidgets.QWidget):
             'host': 'localhost',
             'port': 3306,
             'user': 'root',
-            'password': '123456',
+            'password': '12345678',
             'database': 'book_keeping',
             'charset': 'utf8'
         }
@@ -118,6 +118,20 @@ class Item(QtWidgets.QWidget):
                 row_data.append("")
         print("选中行的数据:", row_data)
         # 在这里添加你需要执行的操作
+        prd_name, buy_date = row_data[1], row_data[8]
+        sql = "select * from invest where prd_name='{}' and buy_date='{}' order by ac_date desc".format(prd_name, buy_date)
+        data = self.dbSearch(sql)
+        self.ui.tableWidget_2.setRowCount(len(data))
+        for i in range(len(data)):
+            item = Invest_dbView(data[i])
+            self.ui.tableWidget_2.setItem(i, 0, QtWidgets.QTableWidgetItem(item.prd_name))
+            self.ui.tableWidget_2.setItem(i, 1, QtWidgets.QTableWidgetItem(item.current_amt))
+            self.ui.tableWidget_2.setItem(i, 2, QtWidgets.QTableWidgetItem(item.profit))
+            self.ui.tableWidget_2.setItem(i, 3, QtWidgets.QTableWidgetItem(item.ac_date))
+            self.ui.tableWidget_2.setItem(i, 4, QtWidgets.QTableWidgetItem(item.days))
+            self.ui.tableWidget_2.setItem(i, 5, QtWidgets.QTableWidgetItem(item.real_rate))
+            self.ui.tableWidget_2.setItem(i, 6, QtWidgets.QTableWidgetItem(item.ts))
+            self.ui.tableWidget_2.setItem(i, 7, QtWidgets.QTableWidgetItem(item.vest_id))
 
     def uiDataCheck(self):
         self.getUiDataVale()

@@ -61,7 +61,7 @@ class Item(QtWidgets.QWidget):
             'host': 'localhost',
             'port': 3306,
             'user': 'root',
-            'password': '123456',
+            'password': '12345678',
             'database': 'book_keeping',
             'charset': 'utf8'
         }
@@ -196,7 +196,7 @@ class Item(QtWidgets.QWidget):
     
     def doDbSearch(self):
         self.getUiDataVale()
-        sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%' and prd_status != 'Y' and isnew='Y'".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
+        sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%' and prd_status != 'Y' and isnew='Y' order by prd_name".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
         if self.uiData.inqRadioButton_exist == "N":
             sql = "select * from invest where prd_name like '%{}%' and prd_channel like '%{}%' order by ac_date desc".format(self.uiData.inqCondition_prdName, self.uiData.inqCondition_prdChannel)
         data = self.dbSearch(sql)

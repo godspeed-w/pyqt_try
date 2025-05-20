@@ -2,7 +2,9 @@ import sys
 import pymysql
 import datetime
 from PyQt5 import QtWidgets
+from matplotlib.figure import Figure
 from PyQt5.QtCore import QDateTime
+import pyqtgraph as pg
 try:
     from widgets.calcReturn.calcReturn_ui import Ui_Form
 except:
@@ -59,7 +61,7 @@ class Item(QtWidgets.QWidget):
             'host': 'localhost',
             'port': 3306,
             'user': 'root',
-            'password': '12345678',
+            'password': '123456',
             'database': 'book_keeping',
             'charset': 'utf8'
         }
@@ -81,6 +83,29 @@ class Item(QtWidgets.QWidget):
         self.ui.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         # 绑定点击事件
         self.ui.tableWidget.itemClicked.connect(self.on_table_row_clicked)
+
+        #  示例数据
+        # accounting_dates = ['2025-01-01', '2025-02-01', '2025-03-01', '2025-04-01', '2025-05-01']
+        # amounts = [1000, 1200, 1100, 1300, 1400]
+        # self.draw_line_chart(accounting_dates, amounts)
+
+    def draw_line_chart(self, dates, amounts):
+        # 创建 PlotWidget
+        self.plot_widget = pg.PlotWidget()
+        # 将 PlotWidget 添加到布局中，如果 ui 中有布局可直接替换
+        layout = QtWidgets.QVBoxLayout(self.ui.graphicsView)
+        layout.addWidget(self.plot_widget)
+        # 转换日期为时间戳
+        timestamps = [datetime.datetime.strptime(date, '%Y-%m-%d').timestamp() for date in dates]
+        # 绘制折线图
+        self.plot_widget.plot(timestamps, amounts, pen='r')
+        # 设置 x 轴标签和格式
+        axis = pg.AxisItem(orientation='bottom')
+        axis.setTicks([[(ts, datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')) for ts in timestamps]])
+        self.plot_widget.setAxisItems({'bottom': axis})
+        # 设置坐标轴标签
+        self.plot_widget.setLabel('bottom', '会计日')
+        self.plot_widget.setLabel('left', '金额')
 
     def is_number(self,s):
         try:
@@ -122,6 +147,7 @@ class Item(QtWidgets.QWidget):
         sql = "select * from invest where prd_name='{}' and buy_date='{}' order by ac_date desc".format(prd_name, buy_date)
         data = self.dbSearch(sql)
         self.ui.tableWidget_2.setRowCount(len(data))
+        amounts, ac_dates = [],[]
         for i in range(len(data)):
             item = Invest_dbView(data[i])
             self.ui.tableWidget_2.setItem(i, 0, QtWidgets.QTableWidgetItem(item.prd_name))
@@ -132,6 +158,9 @@ class Item(QtWidgets.QWidget):
             self.ui.tableWidget_2.setItem(i, 5, QtWidgets.QTableWidgetItem(item.real_rate))
             self.ui.tableWidget_2.setItem(i, 6, QtWidgets.QTableWidgetItem(item.ts))
             self.ui.tableWidget_2.setItem(i, 7, QtWidgets.QTableWidgetItem(item.vest_id))
+            amounts.append(float(item.current_amt))
+            ac_dates.append(item.ac_date)
+        self.draw_line_chart(ac_dates, amounts)
 
     def uiDataCheck(self):
         self.getUiDataVale()

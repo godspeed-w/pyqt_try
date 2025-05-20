@@ -19,6 +19,10 @@
                 {
                     "action": "多线程测试",
                     "src": "widgets.test_thread.test_thread"
+                },
+                {
+                    "action": "绘图测试",
+                    "src": "widgets.test_plot.test_plot"
                 }
             ]
         }

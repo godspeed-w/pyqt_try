@@ -83,18 +83,14 @@ class Item(QtWidgets.QWidget):
         self.ui.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         # 绑定点击事件
         self.ui.tableWidget.itemClicked.connect(self.on_table_row_clicked)
-
-        #  示例数据
-        # accounting_dates = ['2025-01-01', '2025-02-01', '2025-03-01', '2025-04-01', '2025-05-01']
-        # amounts = [1000, 1200, 1100, 1300, 1400]
-        # self.draw_line_chart(accounting_dates, amounts)
-
-    def draw_line_chart(self, dates, amounts):
-        # 创建 PlotWidget
+        # 初始化 pyqtgraph 绘图
         self.plot_widget = pg.PlotWidget()
-        # 将 PlotWidget 添加到布局中，如果 ui 中有布局可直接替换
         layout = QtWidgets.QVBoxLayout(self.ui.graphicsView)
         layout.addWidget(self.plot_widget)
+
+    def draw_line_chart(self, dates, amounts):
+        # 清空之前的绘图
+        self.plot_widget.clear()
         # 转换日期为时间戳
         timestamps = [datetime.datetime.strptime(date, '%Y-%m-%d').timestamp() for date in dates]
         # 绘制折线图

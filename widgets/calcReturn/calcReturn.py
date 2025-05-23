@@ -61,7 +61,7 @@ class Item(QtWidgets.QWidget):
             'host': 'localhost',
             'port': 3306,
             'user': 'root',
-            'password': '12345678',
+            'password': '123456',
             'database': 'book_keeping',
             'charset': 'utf8'
         }
@@ -82,6 +82,7 @@ class Item(QtWidgets.QWidget):
         # 设置表格选择行为为整行选择
         self.ui.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         # 绑定点击事件
+        self.lastChosedRow = -1
         self.ui.tableWidget.itemClicked.connect(self.on_table_row_clicked)
         # 初始化 pyqtgraph 绘图
         self.plot_widget = pg.PlotWidget()
@@ -129,6 +130,12 @@ class Item(QtWidgets.QWidget):
     def on_table_row_clicked(self, item):
         """表格行点击事件处理函数"""
         row = item.row()
+        print("选中行:", row)
+        print(self.lastChosedRow)
+        if self.lastChosedRow == row:
+            return
+        else:
+            self.lastChosedRow = row
         # 获取该行所有单元格的数据
         row_data = []
         for col in range(self.ui.tableWidget.columnCount()):
@@ -315,6 +322,7 @@ class Item(QtWidgets.QWidget):
             else:
                 QtWidgets.QMessageBox.information(self, "提示", "保存成功")
         self.doDbSearch()
+        self.lastChosedRow = -1
     
     def calcDays(self):
         self.getUiDataVale()

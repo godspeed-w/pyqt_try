@@ -217,6 +217,8 @@ class Item(QtWidgets.QWidget):
                 status = "已赎回"
             elif ma_date_obj <= today:
                 status = "到期可赎"
+            elif ma_date_obj == datetime.datetime.strptime("9999-12-31", "%Y-%m-%d").date():
+                status = "快速申赎"
             else:
                 status = "封闭期"
             self.ui.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(status))

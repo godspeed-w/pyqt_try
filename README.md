@@ -44,3 +44,10 @@ mysql -u root -p book_keeping < book_keeping_backup.sql
 mysql -u root -p book_keeping < invest_backup.sql
 source invest_backup.sql
 ```
+
+## 打包命令
+```shell
+pyinstaller -F -w -i logo.png main.py --noconsole
+
+pyinstaller -F -i logo.png calcReturn.py
+```

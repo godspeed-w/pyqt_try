@@ -253,7 +253,7 @@ class Item(QtWidgets.QWidget):
 
     def doFill(self):
         self.getUiDataVale()
-        sql = "select * from invest where prd_name = '{}' and isnew='Y' limit 1".format(self.uiData.prd_name)
+        sql = "select * from invest where prd_name = '{}' and isnew='Y' order by buy_date desc limit 1".format(self.uiData.prd_name)
         data = self.dbSearch(sql)
         if len(data) > 0:
             formatResData = Invest_dbView(data[0])

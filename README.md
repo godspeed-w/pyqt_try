@@ -29,6 +29,7 @@ create table invest(
 	days int comment '相差天数',
 	real_rate float comment '真实年化',
 	isnew char(1) comment '是否最新记录（Y,N）',
+	remark text comment '备注',
 	ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP comment '时间戳',
 	primary key (vest_id)
 )ENGINE=InnoDB  DEFAULT CHARSET=utf8 comment = '投资信息表';
@@ -49,5 +50,5 @@ source invest_backup.sql
 ```shell
 pyinstaller -F -w -i logo.png main.py --noconsole
 
-pyinstaller -F -i logo.png calcReturn.py
+pyinstaller -F -i logo.png calcReturn.py --noconsole
 ```

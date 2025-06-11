@@ -27,7 +27,8 @@ class Invest_dbView():
         self.days = str(data[11])
         self.real_rate = str(data[12])
         self.isnew = str(data[13])
-        self.ts = str(data[14])
+        self.remark = str(data[14])
+        self.ts = str(data[15])
 
     def __str__(self):
         return self.prd_name + " " + str(self.current_amt) + " " + str(self.by_date)
@@ -45,6 +46,7 @@ class UiPageData():
         self.profit = ""
         self.real_rate = ""
         self.prd_status = ""
+        self.remark = ""
         self.inqCondition_prdName = ""
         self.inqCondition_prdChannel = ""
         self.inqRadioButton_exist = ""
@@ -122,6 +124,7 @@ class Item(QtWidgets.QWidget):
         self.uiData.days = self.ui.lineEdit_days.text().strip()
         self.uiData.profit = self.ui.lineEdit_profit.text().strip()
         self.uiData.real_rate = self.ui.lineEdit_rate.text().strip()
+        self.uiData.remark = self.ui.lineEdit_remark.text().strip()
         self.uiData.prd_status = "Y" if self.ui.radioButton_statusY.isChecked() else "N"
         self.uiData.inqCondition_prdName = self.ui.lineEdit_search_condition.text().strip()
         self.uiData.inqCondition_prdChannel = self.ui.lineEdit_search_channel.text().strip()
@@ -159,8 +162,9 @@ class Item(QtWidgets.QWidget):
             self.ui.tableWidget_2.setItem(i, 3, QtWidgets.QTableWidgetItem(item.ac_date))
             self.ui.tableWidget_2.setItem(i, 4, QtWidgets.QTableWidgetItem(item.days))
             self.ui.tableWidget_2.setItem(i, 5, QtWidgets.QTableWidgetItem(item.real_rate))
-            self.ui.tableWidget_2.setItem(i, 6, QtWidgets.QTableWidgetItem(item.ts))
-            self.ui.tableWidget_2.setItem(i, 7, QtWidgets.QTableWidgetItem(item.vest_id))
+            self.ui.tableWidget_2.setItem(i, 6, QtWidgets.QTableWidgetItem(item.remark))
+            self.ui.tableWidget_2.setItem(i, 7, QtWidgets.QTableWidgetItem(item.ts))
+            self.ui.tableWidget_2.setItem(i, 8, QtWidgets.QTableWidgetItem(item.vest_id))
             amounts.append(float(item.current_amt))
             ac_dates.append(item.ac_date)
         self.draw_line_chart(ac_dates, amounts)
@@ -232,8 +236,9 @@ class Item(QtWidgets.QWidget):
             self.ui.tableWidget.setItem(i, 8, QtWidgets.QTableWidgetItem(item.buy_date))
             self.ui.tableWidget.setItem(i, 9, QtWidgets.QTableWidgetItem(item.ma_date))
             self.ui.tableWidget.setItem(i, 10, QtWidgets.QTableWidgetItem(item.ac_date))
-            self.ui.tableWidget.setItem(i, 11, QtWidgets.QTableWidgetItem(item.ts))
-            self.ui.tableWidget.setItem(i, 12, QtWidgets.QTableWidgetItem(item.vest_id))
+            self.ui.tableWidget.setItem(i, 11, QtWidgets.QTableWidgetItem(item.remark))
+            self.ui.tableWidget.setItem(i, 12, QtWidgets.QTableWidgetItem(item.ts))
+            self.ui.tableWidget.setItem(i, 13, QtWidgets.QTableWidgetItem(item.vest_id))
             totalValue += float(item.current_amt)
             profit += float(item.profit)
             if status == "封闭期":
@@ -260,6 +265,7 @@ class Item(QtWidgets.QWidget):
             self.ui.lineEdit_channel.setText(formatResData.prd_channel)
             self.ui.lineEdit_cost.setText(formatResData.buy_amt)
             self.ui.lineEdit_amt.setText(formatResData.current_amt)
+            self.ui.lineEdit_remark.setText(formatResData.remark)
             self.ui.dateEdit_maDate.setDate(QDateTime.fromString(formatResData.ma_date, "yyyy-MM-dd").date())
             self.ui.dateEdit_buyDate.setDate(QDateTime.fromString(formatResData.buy_date, "yyyy-MM-dd").date())
             self.ui.dateEdit_acDate.setDate(QDateTime.currentDateTime().date())
@@ -269,6 +275,7 @@ class Item(QtWidgets.QWidget):
             self.ui.lineEdit_channel.setText("")
             self.ui.lineEdit_cost.setText("0")
             self.ui.lineEdit_amt.setText("0")
+            self.ui.lineEdit_remark.setText("")
             self.ui.dateEdit_maDate.setDate(QDateTime.fromString("9999-12-31", "yyyy-MM-dd").date())
             self.ui.dateEdit_buyDate.setDate(QDateTime.currentDateTime().date())
             self.ui.dateEdit_acDate.setDate(QDateTime.currentDateTime().date())
@@ -298,8 +305,8 @@ class Item(QtWidgets.QWidget):
         prdInfo = self.dbSearch(serPrdSql)
         if len(prdInfo) > 0:
             formatResData = Invest_dbView(prdInfo[0])
-            updSql = "update invest set prd_channel='{}',prd_status='{}',buy_amt='{}',ma_date='{}',current_amt='{}',profit='{}',days='{}',real_rate='{}' where vest_id='{}'"
-            updSql = updSql.format(self.uiData.prd_channel, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.ma_date, self.uiData.current_amt, self.uiData.profit, self.uiData.days, self.uiData.real_rate, formatResData.vest_id) 
+            updSql = "update invest set prd_channel='{}',prd_status='{}',buy_amt='{}',ma_date='{}',current_amt='{}',profit='{}',days='{}',real_rate='{}',remark='{}' where vest_id='{}'"
+            updSql = updSql.format(self.uiData.prd_channel, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.ma_date, self.uiData.current_amt, self.uiData.profit, self.uiData.days, self.uiData.real_rate, self.uiData.remark, formatResData.vest_id) 
             flg = self.dbExcute(updSql)
             if flg == False:
                 QtWidgets.QMessageBox.information(self, "提示", "更新失败")
@@ -316,8 +323,8 @@ class Item(QtWidgets.QWidget):
                 self.dbExcute(updmaxPrdAcDateSql)
             else:
                 isnew = "N"
-            insSql = "insert into invest (prd_channel,prd_name,prd_status,buy_amt,buy_date,ma_date,ac_date,current_amt,profit,days,real_rate,isnew) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"
-            insSql = insSql.format(self.uiData.prd_channel, self.uiData.prd_name, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.buy_date, self.uiData.ma_date, self.uiData.ac_date, self.uiData.current_amt, self.uiData.profit, self.uiData.days, self.uiData.real_rate,isnew) 
+            insSql = "insert into invest (prd_channel,prd_name,prd_status,buy_amt,buy_date,ma_date,ac_date,current_amt,profit,days,real_rate,isnew, remark) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"
+            insSql = insSql.format(self.uiData.prd_channel, self.uiData.prd_name, self.uiData.prd_status, self.uiData.buy_amt, self.uiData.buy_date, self.uiData.ma_date, self.uiData.ac_date, self.uiData.current_amt, self.uiData.profit, self.uiData.days, self.uiData.real_rate,isnew, self.uiData.remark) 
             flg = self.dbExcute(insSql)
             if flg == False:
                 QtWidgets.QMessageBox.information(self, "提示", "保存失败")
